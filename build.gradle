@@ -1,0 +1,55 @@
+plugins {
+    id 'org.jetbrains.kotlin.jvm' version '1.5.10'
+    id 'com.github.johnrengelman.shadow' version '7.1.0'
+}
+
+group 'org.example'
+version '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+    jcenter()
+    maven { url 'https://jitpack.io' }
+}
+
+shadowJar{
+    baseName 'appium-test-ios-java-junit'
+}
+
+//source: https://stackoverflow.com/a/27455099/8016330
+task getDeps(type: Copy) {
+    from sourceSets.test.runtimeClasspath
+    // if you need this from the dependencies in the build.gradle then it should be :
+    // from sourceSets.main.runtimeClasspath
+    into 'build/libs/dependency-jars'
+}
+
+//packaging tests task which is generated from sample using gradle init
+task packageTests(type: Jar) {
+    dependsOn getDeps
+    from sourceSets.test.output
+    classifier = 'tests'
+}
+
+//create zip archive
+//source: https://stackoverflow.com/a/36883221/8016330
+task zip(type: Zip) {
+    dependsOn packageTests
+    from 'build/libs/'
+    include '*'
+    include '*/*' //to include contents of a folder present inside dependency-jars directory
+    archiveName 'zip-with-dependencies.zip'
+    destinationDir(file('build/libs/'))
+}
+
+dependencies {
+    implementation "org.jetbrains.kotlin:kotlin-stdlib"
+    implementation 'junit:junit:4.13.2'
+    implementation 'com.github.appium:java-client:v8.0.0-beta'
+    implementation 'org.seleniumhq.selenium:selenium-java:4.0.0'
+    implementation 'commons-io:commons-io:2.6'
+}
+
+test {
+    useJUnitPlatform()
+}
